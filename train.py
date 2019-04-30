@@ -3,6 +3,8 @@ from keras.callbacks import Callback
 import wandb
 from wandb.keras import WandbCallback
 
+import subprocess
+import os
 import os.path
 import time
 import numpy as np
@@ -184,6 +186,12 @@ def main(argv=None):
     if tf.gfile.Exists(FLAGS.gen_frm_dir):
         tf.gfile.DeleteRecursively(FLAGS.gen_frm_dir)
     tf.gfile.MakeDirs(FLAGS.gen_frm_dir)
+
+    # automatically get the data if it doesn't exist
+    if not os.path.exists("catz"):
+        print("Downloading catz dataset...")
+        subprocess.check_output(
+            "curl https://storage.googleapis.com/wandb/catz.tar.gz | tar xz", shell=True)
 
     # load data
     train_input_handle, test_input_handle = datasets_factory.data_provider(
