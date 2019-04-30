@@ -2,6 +2,7 @@ from data_provider import mnist
 
 datasets_map = {
     'mnist': mnist,
+
 }
 
 def data_provider(dataset_name, train_data_paths, valid_data_paths, batch_size,
