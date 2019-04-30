@@ -79,15 +79,15 @@ class Model(object):
         self.x = tf.placeholder(tf.float32,
                                 [FLAGS.batch_size,
                                  FLAGS.seq_length,
-                                 FLAGS.img_width/FLAGS.patch_size,
-                                 FLAGS.img_width/FLAGS.patch_size,
+                                 int(FLAGS.img_width/FLAGS.patch_size),
+                                 int(FLAGS.img_width/FLAGS.patch_size),
                                  FLAGS.patch_size*FLAGS.patch_size*FLAGS.img_channel])
 
         self.mask_true = tf.placeholder(tf.float32,
                                         [FLAGS.batch_size,
                                          FLAGS.seq_length-FLAGS.input_length-1,
-                                         FLAGS.img_width/FLAGS.patch_size,
-                                         FLAGS.img_width/FLAGS.patch_size,
+                                         int(FLAGS.img_width/FLAGS.patch_size),
+                                         int(FLAGS.img_width/FLAGS.patch_size),
                                          FLAGS.patch_size*FLAGS.patch_size*FLAGS.img_channel])
 
         grads = []
@@ -96,7 +96,7 @@ class Model(object):
         self.tf_lr = tf.placeholder(tf.float32, shape=[])
         num_hidden = [int(x) for x in FLAGS.num_hidden.split(',')]
         print(num_hidden)
-        num_layers = len(num_hidden)
+        num_layers = len(num_hidden) #layers = number of hidden layer filters passed in
         with tf.variable_scope(tf.get_variable_scope()):
             # define a model
             output_list = models_factory.construct_model(
@@ -239,6 +239,8 @@ def main(argv=None):
                                            int(FLAGS.img_width/FLAGS.patch_size),
                                            int(FLAGS.img_width/FLAGS.patch_size),
                                            FLAGS.patch_size**2*FLAGS.img_channel))
+        print("ims shape:",ims.shape)
+        print("mask_true shape: ", mask_true.shape)
         cost = model.train(ims, lr, mask_true)
         if FLAGS.reverse_input:
             ims_rev = ims[:,::-1]
