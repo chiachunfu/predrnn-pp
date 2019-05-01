@@ -13,7 +13,6 @@ def rnn(images, mask_true, num_layers, num_hidden, filter_size, stride=1,
     hidden = []
     shape = images.get_shape().as_list()
     output_channels = shape[-1] # RGB = 3
-
     for i in range(num_layers):
         if i == 0:
             num_hidden_in = num_hidden[num_layers-1]
@@ -58,7 +57,8 @@ def rnn(images, mask_true, num_layers, num_hidden, filter_size, stride=1,
             gen_images.append(x_gen)
             #print("length of gen_images",len(gen_images))
     np_gen_images = np.stack(gen_images)
-    print("shape of gen_images:", np_gen_images.shape)
+    #print("shape of gen_images:", np_gen_images.shape)
+    #print(output_channels)
     gen_images = tf.stack(gen_images)
     # [batch_size, seq_length, height, width, channels]
     gen_images = tf.transpose(gen_images, [1,0,2,3,4])
