@@ -52,6 +52,8 @@ if 0:
                                 'number of image channel.')
     tf.app.flags.DEFINE_integer('patch_size', 4,
                                 'patch size on one dimension.')
+    tf.app.flags.DEFINE_integer('batch_size', 8,
+                                'batch size for training.')
 tf.app.flags.DEFINE_integer('input_length', 5,
                             'encoder hidden states.')
 tf.app.flags.DEFINE_integer('seq_length', 6,
@@ -62,6 +64,8 @@ tf.app.flags.DEFINE_integer('img_channel', 3,
                             'number of image channel.')
 tf.app.flags.DEFINE_integer('patch_size', 1,
                             'patch size on one dimension.')
+tf.app.flags.DEFINE_integer('batch_size', 4,
+                            'batch size for training.')
 tf.app.flags.DEFINE_integer('stride', 1,
                             'stride of a convlstm layer.')
 tf.app.flags.DEFINE_integer('filter_size', 5,
@@ -76,8 +80,7 @@ tf.app.flags.DEFINE_float('lr', 0.001,
                           'base learning rate.')
 tf.app.flags.DEFINE_boolean('reverse_input', True,
                             'whether to reverse the input frames while training.')
-tf.app.flags.DEFINE_integer('batch_size', 8,
-                            'batch size for training.')
+
 tf.app.flags.DEFINE_integer('max_iterations', 80000,
                             'max num of steps.')
 tf.app.flags.DEFINE_integer('display_interval', 1,
@@ -275,13 +278,18 @@ def main(argv=None):
                                            FLAGS.patch_size ** 2 * FLAGS.img_channel))
 
         for batch_train_seq in my_predrnnpp_generator(FLAGS.batch_size,train_dir):
+            #print(batch_train_seq.shape)
+            #8*20 * 16*16*16
+            #8*6*96*96*3
             cost = model.train(batch_train_seq, lr, mask_true)
             print("training loss:, ", cost)
         for batch_valid_seq in my_predrnnpp_generator(FLAGS.batch_size,valid_dir):
             cost = model.test(batch_valid_seq, mask_true)
+            #pass
             print("validation loss: ", cost)
         if itr % FLAGS.snapshot_interval == 0:
-            model.save(itr)
+            pass
+            #model.save(itr)
     '''
     for itr in range(1, FLAGS.max_iterations + 1):
         if train_input_handle.no_batch_left():
