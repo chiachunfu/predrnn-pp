@@ -54,6 +54,9 @@ if 0:
                                 'patch size on one dimension.')
     tf.app.flags.DEFINE_integer('batch_size', 8,
                                 'batch size for training.')
+    tf.app.flags.DEFINE_string('num_hidden', '128,64,64,64',
+                               'COMMA separated number of units in a convlstm layer.')
+
 tf.app.flags.DEFINE_integer('input_length', 5,
                             'encoder hidden states.')
 tf.app.flags.DEFINE_integer('seq_length', 6,
@@ -66,12 +69,13 @@ tf.app.flags.DEFINE_integer('patch_size', 1,
                             'patch size on one dimension.')
 tf.app.flags.DEFINE_integer('batch_size', 4,
                             'batch size for training.')
+tf.app.flags.DEFINE_string('num_hidden', '32,32,32,32',
+                           'COMMA separated number of units in a convlstm layer.')
+
 tf.app.flags.DEFINE_integer('stride', 1,
                             'stride of a convlstm layer.')
 tf.app.flags.DEFINE_integer('filter_size', 5,
                             'filter of a convlstm layer.')
-tf.app.flags.DEFINE_string('num_hidden', '128,64,64,64',
-                           'COMMA separated number of units in a convlstm layer.')
 
 tf.app.flags.DEFINE_boolean('layer_norm', True,
                             'whether to apply tensor layer norm.')
