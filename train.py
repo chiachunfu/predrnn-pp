@@ -67,7 +67,7 @@ tf.app.flags.DEFINE_integer('img_channel', 3,
                             'number of image channel.')
 tf.app.flags.DEFINE_integer('patch_size', 1,
                             'patch size on one dimension.')
-tf.app.flags.DEFINE_integer('batch_size', 4,
+tf.app.flags.DEFINE_integer('batch_size', 8,
                             'batch size for training.')
 tf.app.flags.DEFINE_string('num_hidden', '32,32,32,32',
                            'COMMA separated number of units in a convlstm layer.')
@@ -286,6 +286,13 @@ def main(argv=None):
             #8*20 * 16*16*16
             #8*6*96*96*3
             cost = model.train(batch_train_seq, lr, mask_true)
+
+            if FLAGS.reverse_input:
+                batch_train_seq_rev = batch_train_seq[:, ::-1]
+                cost += model.train(batch_train_seq_rev, lr, mask_true)
+                cost = cost / 2
+
+
             print("training loss:, ", cost)
         for batch_valid_seq in my_predrnnpp_generator(FLAGS.batch_size,valid_dir):
             cost = model.test(batch_valid_seq, mask_true)
