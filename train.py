@@ -56,21 +56,29 @@ if 0:
                                 'batch size for training.')
     tf.app.flags.DEFINE_string('num_hidden', '128,64,64,64',
                                'COMMA separated number of units in a convlstm layer.')
-
-tf.app.flags.DEFINE_integer('input_length', 5,
-                            'encoder hidden states.')
-tf.app.flags.DEFINE_integer('seq_length', 6,
-                            'total input and output length.')
-tf.app.flags.DEFINE_integer('img_width', 96,
-                            'input image width.')
-tf.app.flags.DEFINE_integer('img_channel', 3,
-                            'number of image channel.')
-tf.app.flags.DEFINE_integer('patch_size', 1,
-                            'patch size on one dimension.')
-tf.app.flags.DEFINE_integer('batch_size', 8,
-                            'batch size for training.')
-tf.app.flags.DEFINE_string('num_hidden', '32,32,32,32',
-                           'COMMA separated number of units in a convlstm layer.')
+    tf.app.flags.DEFINE_float('lr', 0.001,
+                              'base learning rate.')
+    tf.app.flags.DEFINE_integer('snapshot_interval', 10000,
+                                'number of iters saving models.')
+else:
+    tf.app.flags.DEFINE_integer('input_length', 5,
+                                'encoder hidden states.')
+    tf.app.flags.DEFINE_integer('seq_length', 6,
+                                'total input and output length.')
+    tf.app.flags.DEFINE_integer('img_width', 48,
+                                'input image width.')
+    tf.app.flags.DEFINE_integer('img_channel', 3,
+                                'number of image channel.')
+    tf.app.flags.DEFINE_integer('patch_size', 1,
+                                'patch size on one dimension.')
+    tf.app.flags.DEFINE_integer('batch_size', 4,
+                                'batch size for training.')
+    tf.app.flags.DEFINE_string('num_hidden', '32,32,32',
+                               'COMMA separated number of units in a convlstm layer.')
+    tf.app.flags.DEFINE_float('lr', 0.0001,
+                              'base learning rate.')
+    tf.app.flags.DEFINE_integer('snapshot_interval', 5,
+                                'number of iters saving models.')
 
 tf.app.flags.DEFINE_integer('stride', 1,
                             'stride of a convlstm layer.')
@@ -80,8 +88,7 @@ tf.app.flags.DEFINE_integer('filter_size', 5,
 tf.app.flags.DEFINE_boolean('layer_norm', True,
                             'whether to apply tensor layer norm.')
 # optimization
-tf.app.flags.DEFINE_float('lr', 0.001,
-                          'base learning rate.')
+
 tf.app.flags.DEFINE_boolean('reverse_input', True,
                             'whether to reverse the input frames while training.')
 
@@ -91,8 +98,6 @@ tf.app.flags.DEFINE_integer('display_interval', 1,
                             'number of iters showing training loss.')
 tf.app.flags.DEFINE_integer('test_interval', 2000,
                             'number of iters for test.')
-tf.app.flags.DEFINE_integer('snapshot_interval', 10000,
-                            'number of iters saving models.')
 
 class Model(object):
     def __init__(self):
@@ -193,7 +198,7 @@ def my_generator(batch_size, img_dir):
             counter = 0
         for i in range(batch_size):
             input_imgs = glob.glob(cat_dirs[counter + i] + "/cat_[0-5]*")
-            imgs = [Image.open(img) for img in sorted(input_imgs)]
+            imgs = [cv2.resize(cv2.imread(img), (FLAGS.img_width,FLAGS.img_width)) for img in sorted(input_imgs)]
             input_images[i] = np.concatenate(imgs, axis=2)
             output_images[i] = np.array(Image.open(
                 cat_dirs[counter + i] + "/cat_result.jpg"))
@@ -204,7 +209,8 @@ def my_predrnnpp_generator(batch_size, img_dir):
     """A generator that returns 5 images plus a result image"""
     cat_dirs = glob.glob(img_dir + "/*")
     counter = 0
-    while True:
+    if 1:
+    #while True:
         input_images = np.zeros(
             (batch_size, 6, FLAGS.img_width, FLAGS.img_width, 3))
         #output_images = np.zeros((batch_size, config.width, config.height, 3))
@@ -213,15 +219,47 @@ def my_predrnnpp_generator(batch_size, img_dir):
             counter = 0
         for i in range(batch_size):
             input_imgs = glob.glob(cat_dirs[counter + i] + "/cat_[0-5]*")
-            imgs = [np.asarray(Image.open(img)) for img in sorted(input_imgs)]
+            imgs = [cv2.resize(cv2.imread(img), (FLAGS.img_width,FLAGS.img_width))/255. for img in sorted(input_imgs)]
             #input_images[i] = np.concatenate(imgs, axis=2)
 
-            imgs.append(np.array(Image.open(
-                cat_dirs[counter + i] + "/cat_result.jpg")))
+            imgs.append(cv2.resize(cv2.imread(
+                cat_dirs[counter + i] + "/cat_result.jpg"), (FLAGS.img_width,FLAGS.img_width))/255.)
             input_images[i] = np.asarray(imgs)
         #yield (input_images, output_images)
         yield (input_images)
         counter += batch_size
+
+class batch_generator():
+    def __init__(self, data_dir):
+        self.cat_dirs = glob.glob(data_dir + "/*")
+        self.counter = 0
+        self.total_len = len(self.cat_dirs)
+        #print(self.total_len)
+        random.shuffle(self.cat_dirs)
+    def batch_gen(self, batch_size):
+        input_images = np.zeros(
+            (batch_size, 6, FLAGS.img_width, FLAGS.img_width, 3))
+        #if ((self.counter+1)*batch_size >= len(self.cat_dirs)):
+            #counter = 0
+        for i in range(batch_size):
+            input_imgs = glob.glob(self.cat_dirs[self.counter + i] + "/cat_[0-5]*")
+            imgs = [cv2.resize(cv2.imread(img), (FLAGS.img_width,FLAGS.img_width))/255. for img in sorted(input_imgs)]
+            #input_images[i] = np.concatenate(imgs, axis=2)
+
+            imgs.append(cv2.resize(cv2.imread(
+                self.cat_dirs[self.counter + i] + "/cat_result.jpg"), (FLAGS.img_width,FLAGS.img_width))/255.)
+            input_images[i] = np.asarray(imgs)
+        self.counter += batch_size
+        #yield (input_images, output_images)
+        return (input_images)
+
+    def check_batch_left(self):
+        if (self.counter+1)*FLAGS.batch_size >= self.total_len:
+            self.counter = 0 #reset counter
+
+            return False
+        else:
+            return True
 
 def main(argv=None):
     if tf.gfile.Exists(FLAGS.save_dir):
@@ -249,9 +287,13 @@ def main(argv=None):
     delta = 0.00002
     base = 0.99998
     eta = 1
-    valid_dir = 'catz/test'
-    train_dir = 'catz/train'
 
+    val_dir = 'catz/test'
+    train_dir = 'catz/train'
+    #train_dir = 'catz_overfit'
+
+    TrainData = batch_generator(train_dir)
+    ValData = batch_generator(val_dir)
     for itr in range(1, FLAGS.max_iterations + 1):
         if itr < 50000:
             eta -= delta
@@ -280,25 +322,34 @@ def main(argv=None):
                                            int(FLAGS.img_width / FLAGS.patch_size),
                                            int(FLAGS.img_width / FLAGS.patch_size),
                                            FLAGS.patch_size ** 2 * FLAGS.img_channel))
+        train_cost_avg = 0
+        train_batch_num = 0
+        while TrainData.check_batch_left() == True:
+            batch_train_seq = TrainData.batch_gen(FLAGS.batch_size)
 
-        for batch_train_seq in my_predrnnpp_generator(FLAGS.batch_size,train_dir):
-            #print(batch_train_seq.shape)
-            #8*20 * 16*16*16
-            #8*6*96*96*3
             cost = model.train(batch_train_seq, lr, mask_true)
 
             if FLAGS.reverse_input:
                 batch_train_seq_rev = batch_train_seq[:, ::-1]
                 cost += model.train(batch_train_seq_rev, lr, mask_true)
                 cost = cost / 2
+            train_batch_num += 1
+            train_cost_avg = ((train_cost_avg * (TrainData.counter - FLAGS.batch_size) +
+                               cost * FLAGS.batch_size) / TrainData.counter)
+            print("iter: ", itr, "batch: ", train_batch_num, ". current batch training loss: ", cost, ", avg training batch loss: ", train_cost_avg)
 
+        val_cost_avg = 0
+        val_batch_num = 0
+        while ValData.check_batch_left() == True:
+            batch_val_seq = ValData.batch_gen(FLAGS.batch_size)
+            val_batch_num += 1
 
-            print("training loss:, ", cost)
-        for batch_valid_seq in my_predrnnpp_generator(FLAGS.batch_size,valid_dir):
-            cost = model.test(batch_valid_seq, mask_true)
-            #pass
-            print("validation loss: ", cost)
-        if itr % FLAGS.snapshot_interval == 0:
+            cost = model.test(batch_val_seq, mask_true)
+            val_cost_avg = ((val_cost_avg * (ValData.counter - FLAGS.batch_size) + cost * FLAGS.batch_size) / ValData.counter)
+            print("iter: ", itr, "batch: ", val_batch_num, "current batch validation loss: ", cost, "avg validation batch loss: ",
+                  val_cost_avg)
+
+    if itr % FLAGS.snapshot_interval == 0:
             pass
             #model.save(itr)
     '''
@@ -372,7 +423,7 @@ def main(argv=None):
                 test_ims = test_input_handle.get_batch()
                 test_dat = preprocess.reshape_patch(test_ims, FLAGS.patch_size)
                 img_gen = model.test(test_dat, mask_true)
-
+            
                 # concat outputs of different gpus along batch
                 img_gen = np.concatenate(img_gen)
                 img_gen = preprocess.reshape_patch_back(img_gen, FLAGS.patch_size)
