@@ -162,6 +162,12 @@ class Model(object):
         loss, _ = self.sess.run((self.loss_train, self.train_op), feed_dict)
         return loss
 
+    def validate(self, inputs, mask_true):
+        feed_dict = {self.x: inputs}
+        feed_dict.update({self.mask_true: mask_true})
+        loss = self.sess.run((self.loss_train), feed_dict)
+        return loss
+
     def test(self, inputs, mask_true):
         feed_dict = {self.x: inputs}
         feed_dict.update({self.mask_true: mask_true})
@@ -324,7 +330,7 @@ def main(argv=None):
                                            FLAGS.patch_size ** 2 * FLAGS.img_channel))
         train_cost_avg = 0
         train_batch_num = 0
-        while TrainData.check_batch_left() == True:
+        while TrainData.check_batch_left():
             batch_train_seq = TrainData.batch_gen(FLAGS.batch_size)
 
             cost = model.train(batch_train_seq, lr, mask_true)
@@ -340,18 +346,17 @@ def main(argv=None):
 
         val_cost_avg = 0
         val_batch_num = 0
-        while ValData.check_batch_left() == True:
+        while ValData.check_batch_left():
             batch_val_seq = ValData.batch_gen(FLAGS.batch_size)
             val_batch_num += 1
 
-            cost = model.test(batch_val_seq, mask_true)
+            cost = model.validate(batch_val_seq, mask_true)
             val_cost_avg = ((val_cost_avg * (ValData.counter - FLAGS.batch_size) + cost * FLAGS.batch_size) / ValData.counter)
             print("iter: ", itr, "batch: ", val_batch_num, "current batch validation loss: ", cost, "avg validation batch loss: ",
                   val_cost_avg)
 
-    if itr % FLAGS.snapshot_interval == 0:
-            pass
-            #model.save(itr)
+        if itr % FLAGS.snapshot_interval == 0:
+            model.save(itr)
     '''
     for itr in range(1, FLAGS.max_iterations + 1):
         if train_input_handle.no_batch_left():
