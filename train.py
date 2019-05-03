@@ -70,21 +70,21 @@ else:
                                 'encoder hidden states.')
     tf.app.flags.DEFINE_integer('seq_length', 6,
                                 'total input and output length.')
-    tf.app.flags.DEFINE_integer('img_width', 48,
+    tf.app.flags.DEFINE_integer('img_width', 96,
                                 'input image width.')
     tf.app.flags.DEFINE_integer('img_channel', 3,
                                 'number of image channel.')
     tf.app.flags.DEFINE_integer('patch_size', 1,
                                 'patch size on one dimension.')
-    tf.app.flags.DEFINE_integer('batch_size', 8,
+    tf.app.flags.DEFINE_integer('batch_size', 4,
                                 'batch size for training.')
-    tf.app.flags.DEFINE_string('num_hidden', '64,48,32,32',
+    tf.app.flags.DEFINE_string('num_hidden', '64,32,32,32',
                                'COMMA separated number of units in a convlstm layer.')
     tf.app.flags.DEFINE_float('lr', 0.001,
                               'base learning rate.')
     tf.app.flags.DEFINE_integer('snapshot_interval', 5,
                                 'number of iters saving models.')
-    tf.app.flags.DEFINE_integer('test_interval', 5,
+    tf.app.flags.DEFINE_integer('test_interval', 3,
                                 'number of iters for test.')
     tf.app.flags.DEFINE_string('gen_frm_dir', 'result_debug/catz_predrnn_pp',
                                'dir to store result.')
@@ -276,7 +276,7 @@ class batch_generator():
         return (input_images, input_images_unscaled)
 
     def check_batch_left(self):
-        if (self.counter+1)*FLAGS.batch_size > self.total_len:
+        if (self.counter+1)+FLAGS.batch_size > self.total_len:
             self.counter = 0 #reset counter
             return False
         else:
@@ -325,8 +325,7 @@ def main(argv=None):
     #train_dir = 'catz_overfit'
     #val_dir = 'catz_overfit'
 
-    TrainData = batch_generator(train_dir)
-    ValData = batch_generator(val_dir)
+
     log_start_time = str(datetime.datetime.now().strftime('%Y-%m-%d_%H'))
 
     train_log_file_name = 'debug_train_loss_'+log_start_time+'.txt'
@@ -338,6 +337,8 @@ def main(argv=None):
     metrics_fh = open(metrics_log_file_name, 'w')
 
     for itr in range(1, FLAGS.max_iterations + 1):
+        TrainData = batch_generator(train_dir)
+        ValData = batch_generator(val_dir)
         if itr < 50000:
             eta -= delta
         else:
@@ -389,7 +390,7 @@ def main(argv=None):
         val_batch_num = 0
         batch_id = 0
         while ValData.check_batch_left():
-            batch_val_seq, batch_val_seq_unscaled = ValData.batch_gen(FLAGS.batch_size)
+            batch_val_seq, batch_val_seq_unscaled = ValData.batch_gen()
             val_batch_num += 1
             mask_true = np.zeros((FLAGS.batch_size,
                                   FLAGS.seq_length - FLAGS.input_length - 1,
@@ -449,13 +450,13 @@ def main(argv=None):
                 #            ssim[i] += score
 
                     # save prediction examples
-                if batch_id <= 25:
+                if batch_id <= 200:
                     path = os.path.join(res_path,str(batch_id))
                     if not os.path.exists(path):
                         os.mkdir(path)
                     for b_idx in range(len(batch_val_seq_unscaled)):
                         for i in range(len(batch_val_seq_unscaled_[0])):
-                            name = 'gt_unscaled' + "_img_" + str(b_idx) +"_ seq+ str(1+i)" + '.png'
+                            name = 'gt_unscaled' + "_img_" + str(b_idx) +"_ seq"+ str(1+i) + '.png'
                             file_name = os.path.join(path, name)
                             #print(batch_val_seq_unscaled.shape)
                             img_gt = np.uint8(batch_val_seq_unscaled_[b_idx, i,:, :, :])
@@ -467,7 +468,7 @@ def main(argv=None):
 
                             #cv2.imwrite(file_name, img_gt)
                         for i in range(len(img_gen_scaled_back[0])):
-                            name = 'pd_scaledback'+ "_img_" + str(b_idx) +"_ seq+ str(1+i)" + '.png'
+                            name = 'pd_scaledback'+ "_img_" + str(b_idx) +"_ seq"+ str(1+i) + '.png'
                             file_name = os.path.join(path, name)
                                 #img_pd = img_gen[0, i, :, :, :]
                                 #img_pd = np.maximum(img_pd, 0)
@@ -479,7 +480,7 @@ def main(argv=None):
                             cv2.imwrite(file_name, img_pd)
                         if 0 :
                             for i in range(len(img_gen_[0])):
-                                name = 'pd_modeloutput'+ "_img_" + str(b_idx) +"_ seq+ str(1+i)" + '.png'
+                                name = 'pd_modeloutput'+ "_img_" + str(b_idx) +"_ seq"+ str(1+i) + '.png'
                                 file_name = os.path.join(path, name)
                                 # img_pd = img_gen[0, i, :, :, :]
                                 # img_pd = np.maximum(img_pd, 0)
