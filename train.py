@@ -65,6 +65,8 @@ if 0:
                                 'number of iters for test.')
     tf.app.flags.DEFINE_string('gen_frm_dir', 'results/mnist_predrnn_pp',
                                'dir to store result.')
+    tf.app.flags.DEFINE_integer('max_iterations', 80000,
+                                'max num of steps.')
 else:
     tf.app.flags.DEFINE_integer('input_length', 5,
                                 'encoder hidden states.')
@@ -88,6 +90,8 @@ else:
                                 'number of iters for test.')
     tf.app.flags.DEFINE_string('gen_frm_dir', 'result_debug/catz_predrnn_pp',
                                'dir to store result.')
+    tf.app.flags.DEFINE_integer('max_iterations', 60,
+                                'max num of steps.')
 
 tf.app.flags.DEFINE_integer('stride', 1,
                             'stride of a convlstm layer.')
@@ -101,8 +105,7 @@ tf.app.flags.DEFINE_boolean('layer_norm', True,
 tf.app.flags.DEFINE_boolean('reverse_input', True,
                             'whether to reverse the input frames while training.')
 
-tf.app.flags.DEFINE_integer('max_iterations', 80000,
-                            'max num of steps.')
+
 tf.app.flags.DEFINE_integer('display_interval', 1,
                             'number of iters showing training loss.')
 
