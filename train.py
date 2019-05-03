@@ -393,7 +393,7 @@ def main(argv=None):
         val_batch_num = 0
         batch_id = 0
         while ValData.check_batch_left():
-            batch_val_seq, batch_val_seq_unscaled = ValData.batch_gen()
+            batch_val_seq, batch_val_seq_unscaled = ValData.batch_gen(FLAGS.batch_size)
             val_batch_num += 1
             mask_true = np.zeros((FLAGS.batch_size,
                                   FLAGS.seq_length - FLAGS.input_length - 1,
