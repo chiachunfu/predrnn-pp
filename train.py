@@ -322,8 +322,8 @@ def main(argv=None):
 
     val_dir = 'catz/test'
     train_dir = 'catz/train'
-    train_dir = 'catz_overfit'
-    val_dir = 'catz_overfit'
+    #train_dir = 'catz_overfit'
+    #val_dir = 'catz_overfit'
 
     TrainData = batch_generator(train_dir)
     ValData = batch_generator(val_dir)
