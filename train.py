@@ -322,8 +322,8 @@ def main(argv=None):
 
     val_dir = 'catz/test'
     train_dir = 'catz/train'
-    #train_dir = 'catz_overfit'
-    #val_dir = 'catz_overfit'
+    train_dir = 'catz_overfit'
+    val_dir = 'catz_overfit'
 
     TrainData = batch_generator(train_dir)
     ValData = batch_generator(val_dir)
@@ -455,7 +455,7 @@ def main(argv=None):
                         os.mkdir(path)
                     for b_idx in range(len(batch_val_seq_unscaled)):
                         for i in range(len(batch_val_seq_unscaled_[0])):
-                            name = 'gt_unscaled' + "_img_" + str(b_idx) +"_ seq+ str(1+i) + '.png'
+                            name = 'gt_unscaled' + "_img_" + str(b_idx) +"_ seq+ str(1+i)" + '.png'
                             file_name = os.path.join(path, name)
                             #print(batch_val_seq_unscaled.shape)
                             img_gt = np.uint8(batch_val_seq_unscaled_[b_idx, i,:, :, :])
@@ -467,7 +467,7 @@ def main(argv=None):
 
                             #cv2.imwrite(file_name, img_gt)
                         for i in range(len(img_gen_scaled_back[0])):
-                            name = 'pd_scaledback'+ "_img_" + str(b_idx) +"_ seq+ str(1+i) + '.png'
+                            name = 'pd_scaledback'+ "_img_" + str(b_idx) +"_ seq+ str(1+i)" + '.png'
                             file_name = os.path.join(path, name)
                                 #img_pd = img_gen[0, i, :, :, :]
                                 #img_pd = np.maximum(img_pd, 0)
@@ -479,7 +479,7 @@ def main(argv=None):
                             cv2.imwrite(file_name, img_pd)
                         if 0 :
                             for i in range(len(img_gen_[0])):
-                                name = 'pd_modeloutput'+ "_img_" + str(b_idx) +"_ seq+ str(1+i) + '.png'
+                                name = 'pd_modeloutput'+ "_img_" + str(b_idx) +"_ seq+ str(1+i)" + '.png'
                                 file_name = os.path.join(path, name)
                                 # img_pd = img_gen[0, i, :, :, :]
                                 # img_pd = np.maximum(img_pd, 0)
