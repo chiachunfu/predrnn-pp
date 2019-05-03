@@ -7,6 +7,7 @@ import subprocess
 import os
 import os.path
 import time
+import datetime
 import numpy as np
 import tensorflow as tf
 import cv2
@@ -19,6 +20,7 @@ from data_provider import datasets_factory
 from utils import preprocess
 from utils import metrics
 from skimage.measure import compare_ssim
+from keras import backend as K
 
 # -----------------------------------------------------------------------------
 FLAGS = tf.app.flags.FLAGS
@@ -34,8 +36,7 @@ tf.app.flags.DEFINE_string('valid_data_paths',
                            'validation data paths.')
 tf.app.flags.DEFINE_string('save_dir', 'checkpoints/mnist_predrnn_pp',
                             'dir to store trained net.')
-tf.app.flags.DEFINE_string('gen_frm_dir', 'results/mnist_predrnn_pp',
-                           'dir to store result.')
+
 # model
 tf.app.flags.DEFINE_string('model_name', 'predrnn_pp',
                            'The name of the architecture.')
@@ -62,6 +63,8 @@ if 0:
                                 'number of iters saving models.')
     tf.app.flags.DEFINE_integer('test_interval', 2000,
                                 'number of iters for test.')
+    tf.app.flags.DEFINE_string('gen_frm_dir', 'results/mnist_predrnn_pp',
+                               'dir to store result.')
 else:
     tf.app.flags.DEFINE_integer('input_length', 5,
                                 'encoder hidden states.')
@@ -75,14 +78,16 @@ else:
                                 'patch size on one dimension.')
     tf.app.flags.DEFINE_integer('batch_size', 8,
                                 'batch size for training.')
-    tf.app.flags.DEFINE_string('num_hidden', '64,32,32,32',
+    tf.app.flags.DEFINE_string('num_hidden', '64,48,32,32',
                                'COMMA separated number of units in a convlstm layer.')
-    tf.app.flags.DEFINE_float('lr', 0.0001,
+    tf.app.flags.DEFINE_float('lr', 0.001,
                               'base learning rate.')
     tf.app.flags.DEFINE_integer('snapshot_interval', 5,
                                 'number of iters saving models.')
-    tf.app.flags.DEFINE_integer('test_interval', 20,
+    tf.app.flags.DEFINE_integer('test_interval', 5,
                                 'number of iters for test.')
+    tf.app.flags.DEFINE_string('gen_frm_dir', 'result_debug/catz_predrnn_pp',
+                               'dir to store result.')
 
 tf.app.flags.DEFINE_integer('stride', 1,
                             'stride of a convlstm layer.')
@@ -245,7 +250,9 @@ class batch_generator():
         self.total_len = len(self.cat_dirs)
         #print(self.total_len)
         random.shuffle(self.cat_dirs)
+    #def batch_gen(self, batch_size, is_add_noise):
     def batch_gen(self, batch_size):
+
         input_images = np.zeros(
             (batch_size, 6, FLAGS.img_width, FLAGS.img_width, 3))
         input_images_unscaled = np.zeros(
@@ -269,20 +276,20 @@ class batch_generator():
         return (input_images, input_images_unscaled)
 
     def check_batch_left(self):
-        if (self.counter+1)*FLAGS.batch_size >= self.total_len:
+        if (self.counter+1)*FLAGS.batch_size > self.total_len:
             self.counter = 0 #reset counter
-
             return False
         else:
             return True
 
-def perceptual_distance(y_true, y_pred):
-    rmean = (y_true[:, :, :, 0] + y_pred[:, :, :, 0]) / 2
-    r = y_true[:, :, :, 0] - y_pred[:, :, :, 0]
-    g = y_true[:, :, :, 1] - y_pred[:, :, :, 1]
-    b = y_true[:, :, :, 2] - y_pred[:, :, :, 2]
+def perceptual_distance(y_true, y_pred): # changed to cv2 format brg
+    rmean = (y_true[:, :, :, 1] + y_pred[:, :, :, 1]) / 2
+    b = y_true[:, :, :, 0] - y_pred[:, :, :, 0]
+    r = y_true[:, :, :, 1] - y_pred[:, :, :, 1]
+    g = y_true[:, :, :, 2] - y_pred[:, :, :, 2]
 
-    return K.mean(K.sqrt((((512+rmean)*r*r)/256) + 4*g*g + (((767-rmean)*b*b)/256)))
+    #return K.mean(K.sqrt((((512+rmean)*r*r)/256) + 4*g*g + (((767-rmean)*b*b)/256)))
+    return np.mean(np.sqrt((((512+rmean)*r*r)/256) + 4*g*g + (((767-rmean)*b*b)/256)))
 
 
 def main(argv=None):
@@ -316,9 +323,20 @@ def main(argv=None):
     val_dir = 'catz/test'
     train_dir = 'catz/train'
     #train_dir = 'catz_overfit'
+    #val_dir = 'catz_overfit'
 
     TrainData = batch_generator(train_dir)
     ValData = batch_generator(val_dir)
+    log_start_time = str(datetime.datetime.now().strftime('%Y-%m-%d_%H'))
+
+    train_log_file_name = 'debug_train_loss_'+log_start_time+'.txt'
+    train_fh = open(train_log_file_name,'w')
+    val_log_file_name = 'debug_val_loss_'+log_start_time+'.txt'
+    val_fh = open(val_log_file_name,'w')
+
+    metrics_log_file_name = 'debug_metrics_' + log_start_time + '.txt'
+    metrics_fh = open(metrics_log_file_name, 'w')
+
     for itr in range(1, FLAGS.max_iterations + 1):
         if itr < 50000:
             eta -= delta
@@ -361,7 +379,11 @@ def main(argv=None):
             train_batch_num += 1
             train_cost_avg = ((train_cost_avg * (TrainData.counter - FLAGS.batch_size) +
                                cost * FLAGS.batch_size) / TrainData.counter)
-            print("iter: ", itr, "batch: ", train_batch_num, ". current batch training loss: ", cost, ", avg training batch loss: ", train_cost_avg)
+            print("iter: ", itr, ", batch: ", train_batch_num, ". current batch training loss: ", cost, ", avg training batch loss: ",
+                  train_cost_avg)
+            log_str = "iter: " + str(itr) + ", batch: " + str(train_batch_num) + ", current batch training loss: "+ str(cost) +\
+                      ", avg training batch loss: " + str(train_cost_avg) + "\n"
+            train_fh.write(log_str)
 
         val_cost_avg = 0
         val_batch_num = 0
@@ -376,8 +398,11 @@ def main(argv=None):
                                   FLAGS.patch_size ** 2 * FLAGS.img_channel))
             cost = model.validate(batch_val_seq, mask_true)
             val_cost_avg = ((val_cost_avg * (ValData.counter - FLAGS.batch_size) + cost * FLAGS.batch_size) / ValData.counter)
-            print("iter: ", itr, "batch: ", val_batch_num, "current batch validation loss: ", cost, "avg validation batch loss: ",
+            print("iter: ", itr, ", batch: ", val_batch_num, ", current batch validation loss: ", cost, "avg validation batch loss: ",
                   val_cost_avg)
+            log_str = "iter: " + str(itr) + ", batch: " + str(val_batch_num) + ", current batch validation loss: " + str(cost) + \
+                      ", avg validation batch loss: " + str(train_cost_avg) + "\n"
+            val_fh.write(log_str)
             #batch_id = 0
             if itr % FLAGS.test_interval == 0:
                 res_path = os.path.join(FLAGS.gen_frm_dir, str(itr))
@@ -388,12 +413,15 @@ def main(argv=None):
                 #img_mse, ssim, psnr, fmae, sharp = [], [], [], [], []
 
                 batch_id = batch_id + 1
+                batch_val_seq_unscaled_ = batch_val_seq_unscaled
                 batch_val_seq_unscaled = batch_val_seq_unscaled[:,-1,:,:,:]
                 img_gen = model.test(batch_val_seq, mask_true)
                 img_gen = np.asarray(img_gen)
+                img_gen = np.reshape(img_gen, [FLAGS.batch_size,FLAGS.seq_length-FLAGS.input_length, FLAGS.img_width, FLAGS.img_width,FLAGS.img_channel])
                 #print(img_gen.shape)
+                img_gen_ = img_gen
                 img_gen = img_gen[:, -1, :, :, :]
-
+                #print(img_gen.shape)
                     # concat outputs of different gpus along batch
                     #img_gen = np.concatenate(img_gen)
                 #img_gen_tmp = []
@@ -401,12 +429,12 @@ def main(argv=None):
                     (FLAGS.batch_size, 1, 96, 96, 3))
                 for ii, b in enumerate(img_gen):
                     img_gen_tmp = []
-                    img_tmp = b[0]
-                    img_gen_tmp.append(cv2.resize(img_tmp, (orig_img_width, orig_img_width)) * 255.)
+                    #img_tmp = b[0]
+                    img_gen_tmp.append(cv2.resize(b, (orig_img_width, orig_img_width)) * 255.)
                     img_gen_scaled_back[ii] = np.asarray(img_gen_tmp)
                 img_gen = img_gen_scaled_back
                 img_gen = img_gen[:, -1, :, :, :]
-                #fmae = metrics.batch_mae_frame_float(batch_val_seq_unscaled, img_gen)
+                fmae = metrics.batch_mae_frame_float(batch_val_seq_unscaled, img_gen)
                 mse = np.square(batch_val_seq_unscaled - img_gen).sum()
                 #        img_mse[i] += mse
                 #       avg_mse += mse
@@ -421,30 +449,55 @@ def main(argv=None):
                 #            ssim[i] += score
 
                     # save prediction examples
-                if batch_id <= 10:
+                if batch_id <= 25:
                     path = os.path.join(res_path,str(batch_id))
                     if not os.path.exists(path):
                         os.mkdir(path)
-                    #for i in range(FLAGS.seq_length):
-                    name = 'gt' + str(1) + '.png'
-                    file_name = os.path.join(path, name)
-                    #print(batch_val_seq_unscaled.shape)
-                    img_gt = np.uint8(batch_val_seq_unscaled[0, :, :, :])
-                    cv2.imwrite(file_name, img_gt)
-                    #for i in range(FLAGS.seq_length - FLAGS.input_length):
-                    name = 'pd' + str(1) + '.png'
-                    file_name = os.path.join(path, name)
-                        #img_pd = img_gen[0, i, :, :, :]
-                        #img_pd = np.maximum(img_pd, 0)
-                        #img_pd = np.minimum(img_pd, 1)
-                        #img_pd = np.uint8(img_pd * 255)
-                    img_pd = np.uint8(img_gen[0, :, :, :])
-                    #print(img_pd.shape)
-                    cv2.imwrite(file_name, img_pd)
+                    for b_idx in range(len(batch_val_seq_unscaled)):
+                        for i in range(len(batch_val_seq_unscaled_[0])):
+                            name = 'gt_unscaled' + "_img_" + str(b_idx) +"_ seq+ str(1+i) + '.png'
+                            file_name = os.path.join(path, name)
+                            #print(batch_val_seq_unscaled.shape)
+                            img_gt = np.uint8(batch_val_seq_unscaled_[b_idx, i,:, :, :])
+                            cv2.imwrite(file_name, img_gt)
+                            #name = 'gt_model' + str(1 + i) + '.png'
+                            #file_name = os.path.join(path, name)
+                            # print(batch_val_seq_unscaled.shape)
+                            #img_gt = np.uint8(batch_val_seq[0, i, :, :, :]*255)
+
+                            #cv2.imwrite(file_name, img_gt)
+                        for i in range(len(img_gen_scaled_back[0])):
+                            name = 'pd_scaledback'+ "_img_" + str(b_idx) +"_ seq+ str(1+i) + '.png'
+                            file_name = os.path.join(path, name)
+                                #img_pd = img_gen[0, i, :, :, :]
+                                #img_pd = np.maximum(img_pd, 0)
+                                #img_pd = np.minimum(img_pd, 1)
+                                #img_pd = np.uint8(img_pd * 255)
+                            img_pd = np.uint8(img_gen_scaled_back[b_idx, i, :, :, :])
+
+                            #print(img_pd.shape)
+                            cv2.imwrite(file_name, img_pd)
+                        if 0 :
+                            for i in range(len(img_gen_[0])):
+                                name = 'pd_modeloutput'+ "_img_" + str(b_idx) +"_ seq+ str(1+i) + '.png'
+                                file_name = os.path.join(path, name)
+                                # img_pd = img_gen[0, i, :, :, :]
+                                # img_pd = np.maximum(img_pd, 0)
+                                # img_pd = np.minimum(img_pd, 1)
+                                # img_pd = np.uint8(img_pd * 255)
+                                img_pd = np.uint8(img_gen_[b_idx, i, :, :, :]*255)
+                                img_pd = np.reshape(img_pd, [FLAGS.img_width, FLAGS.img_width, FLAGS.img_channel])
+                                # print(img_pd.shape)
+                                cv2.imwrite(file_name, img_pd)
                         #cv2.imwrite(file_name, img_gen)
                     #test_input_handle.next()
                 #avg_mse = avg_mse / (batch_id * FLAGS.batch_size)
                 print('mse per seq: ' + str(mse))
+                log_str = 'mse per seq: ' + str(mse)
+                metrics_fh.write(log_str)
+                print('fmae per seq: ' + str(fmae))
+                log_str = 'fmae per seq: ' + str(fmae)
+                metrics_fh.write(log_str)
                 #for i in range(FLAGS.seq_length - FLAGS.input_length):
                     #print(img_mse[i] / (batch_id * FLAGS.batch_size))
                 psnr = np.asarray(psnr, dtype=np.float32) #/ batch_id
@@ -452,6 +505,15 @@ def main(argv=None):
                 #ssim = np.asarray(ssim, dtype=np.float32) #/ (FLAGS.batch_size * batch_id)
                 #sharp = np.asarray(sharp, dtype=np.float32) / (FLAGS.batch_size * batch_id)
                 print('psnr per frame: ' + str(psnr))
+                log_str = 'psnr per seq: ' + str(psnr)
+                metrics_fh.write(log_str)
+                #for b_idx in range(len(img_gen)):
+                    #img_pd = img_gen[b_idx]
+                    #img_gt = batch_val_seq_unscaled[b_idx]
+                #dist = perceptual_distance(Ｋ.variable(value=batch_val_seq_unscaled), K.variable(value=img_gen))
+                dist = perceptual_distance(batch_val_seq_unscaled, img_gen)
+                print("iter: "+str(itr)+ ", batch: " + str(val_batch_num) + ". current perceptual dist: "+str(dist))
+                metrics_fh.write("iter: "+str(itr)+ ", batch: " + str(val_batch_num) + ", current perceptual dist: "+str(dist))
                 #for i in range(FLAGS.seq_length - FLAGS.input_length):
                     #print(psnr[i])
                 #print('fmae per frame: ' + str(np.mean(fmae)))
