@@ -67,7 +67,7 @@ if 0:
                                'dir to store result.')
     tf.app.flags.DEFINE_integer('max_iterations', 80000,
                                 'max num of steps.')
-elif 0:
+elif 1:
     tf.app.flags.DEFINE_integer('input_length', 5,
                                 'encoder hidden states.')
     tf.app.flags.DEFINE_integer('seq_length', 6,
@@ -80,7 +80,7 @@ elif 0:
                                 'patch size on one dimension.')
     tf.app.flags.DEFINE_integer('batch_size',4,
     'batch size for training.')
-    tf.app.flags.DEFINE_string('num_hidden', '64,32,32,32',
+    tf.app.flags.DEFINE_string('num_hidden', '128,64,32,32',
                                'COMMA separated number of units in a convlstm layer.')
     tf.app.flags.DEFINE_float('lr', 0.001,
                               'base learning rate.')
@@ -90,7 +90,7 @@ elif 0:
                                 'number of iters for test.')
     tf.app.flags.DEFINE_string('gen_frm_dir', 'result_debug/catz_predrnn_pp',
                                'dir to store result.')
-    tf.app.flags.DEFINE_integer('max_iterations', 60,
+    tf.app.flags.DEFINE_integer('max_iterations', 200,
                                 'max num of steps.')
 else:
     tf.app.flags.DEFINE_integer('input_length', 5,
@@ -352,8 +352,8 @@ def main(argv=None):
 
     val_dir = 'catz/test'
     train_dir = 'catz/train'
-    train_dir = 'catz_overfit'
-    val_dir = 'catz_overfit'
+    #train_dir = 'catz_overfit'
+    #val_dir = 'catz_overfit'
 
 
     log_start_time = str(datetime.datetime.now().strftime('%Y-%m-%d_%H'))
