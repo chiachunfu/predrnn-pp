@@ -67,6 +67,8 @@ if 0:
                                'dir to store result.')
     tf.app.flags.DEFINE_integer('max_iterations', 80000,
                                 'max num of steps.')
+    tf.app.flags.DEFINE_integer('print_interval', 1,
+                                'number of batches printing  loss.')
 elif 1:
     tf.app.flags.DEFINE_integer('input_length', 5,
                                 'encoder hidden states.')
@@ -80,7 +82,7 @@ elif 1:
                                 'patch size on one dimension.')
     tf.app.flags.DEFINE_integer('batch_size',4,
     'batch size for training.')
-    tf.app.flags.DEFINE_string('num_hidden', '128,64,32,32',
+    tf.app.flags.DEFINE_string('num_hidden', '64,48,32,32',
                                'COMMA separated number of units in a convlstm layer.')
     tf.app.flags.DEFINE_float('lr', 0.001,
                               'base learning rate.')
@@ -92,24 +94,26 @@ elif 1:
                                'dir to store result.')
     tf.app.flags.DEFINE_integer('max_iterations', 200,
                                 'max num of steps.')
+    tf.app.flags.DEFINE_integer('print_interval', 12,
+                                'number of batches printing  loss.')
 else:
     tf.app.flags.DEFINE_integer('input_length', 5,
                                 'encoder hidden states.')
     tf.app.flags.DEFINE_integer('seq_length', 6,
                                 'total input and output length.')
-    tf.app.flags.DEFINE_integer('img_width', 48,
+    tf.app.flags.DEFINE_integer('img_width', 96,
                                 'input image width.')
     tf.app.flags.DEFINE_integer('img_channel', 3,
                                 'number of image channel.')
     tf.app.flags.DEFINE_integer('patch_size', 1,
                                 'patch size on one dimension.')
-    tf.app.flags.DEFINE_integer('batch_size', 8,
+    tf.app.flags.DEFINE_integer('batch_size', 4,
                                 'batch size for training.')
-    tf.app.flags.DEFINE_string('num_hidden', '32,32,32',
+    tf.app.flags.DEFINE_string('num_hidden', '32,16,16,16',
                                'COMMA separated number of units in a convlstm layer.')
     tf.app.flags.DEFINE_float('lr', 0.001,
                               'base learning rate.')
-    tf.app.flags.DEFINE_integer('snapshot_interval', 5,
+    tf.app.flags.DEFINE_integer('snapshot_interval', 1,
                                 'number of iters saving models.')
     tf.app.flags.DEFINE_integer('test_interval', 3,
                                 'number of iters for test.')
@@ -117,6 +121,8 @@ else:
                                'dir to store result.')
     tf.app.flags.DEFINE_integer('max_iterations', 200,
                                 'max num of steps.')
+    tf.app.flags.DEFINE_integer('print_interval', 1,
+                                'number of batches printing  loss.')
 
 tf.app.flags.DEFINE_integer('stride', 1,
                             'stride of a convlstm layer.')
@@ -133,8 +139,7 @@ tf.app.flags.DEFINE_boolean('reverse_input', True,
 
 tf.app.flags.DEFINE_integer('display_interval', 1,
                             'number of iters showing training loss.')
-tf.app.flags.DEFINE_integer('print_interval', 10,
-                            'number of batches printing  loss.')
+
 
 
 class Model(object):
@@ -193,6 +198,10 @@ class Model(object):
         if FLAGS.pretrained_model:
             self.saver.restore(self.sess, FLAGS.pretrained_model)
 
+        #with tf.Session() as sess:
+        writer = tf.summary.FileWriter("output", self.sess.graph)
+        print(self.sess.run(init))
+        writer.close()
     def train(self, inputs, lr, mask_true):
         feed_dict = {self.x: inputs}
         feed_dict.update({self.tf_lr: lr})
@@ -343,6 +352,9 @@ def main(argv=None):
 
     print("Initializing models")
     model = Model()
+
+
+
     lr = FLAGS.lr
 
     delta = 0.00002
@@ -443,7 +455,7 @@ def main(argv=None):
                 if not os.path.exists(res_path):
                     os.mkdir(res_path)
                 #avg_mse = 0
-                #batch_id = 0
+                batch_id = 0
                 #img_mse, ssim, psnr, fmae, sharp = [], [], [], [], []
 
                 batch_id = batch_id + 1
@@ -548,9 +560,11 @@ def main(argv=None):
                 #dist = perceptual_distance(Ｋ.variable(value=batch_val_seq_unscaled), K.variable(value=img_gen))
                 dist += perceptual_distance(batch_val_seq_unscaled, img_gen)
                 #print("iter: "+str(itr) + ", batch: " + str(val_batch_num) + ". current perceptual dist: "+str(dist))
-        avg_dist = dist / val_batch_num
-        metrics_fh.write("iter: " + str(itr) + ", current perceptual dist: " + str(avg_dist) + "\n")
-                #for i in range(FLAGS.seq_length - FLAGS.input_length):
+        if itr % FLAGS.test_interval == 0:
+            avg_dist = dist / val_batch_num
+            print("iter: " + str(itr) + ", current perceptual dist: " + str(avg_dist))
+            metrics_fh.write("iter: " + str(itr) + ", current perceptual dist: " + str(avg_dist) + "\n")
+        #for i in range(FLAGS.seq_length - FLAGS.input_length):
                     #print(psnr[i])
                 #print('fmae per frame: ' + str(np.mean(fmae)))
                 #for i in range(FLAGS.seq_length - FLAGS.input_length):
