@@ -556,10 +556,10 @@ def main(argv=None):
                     #test_input_handle.next()
                 #avg_mse = avg_mse / (batch_id * FLAGS.batch_size)
                 if batch_id % FLAGS.print_interval == 0 :
-                    print('mse per seq: ' + str(mse))
+                    #print('mse per seq: ' + str(mse))
                     log_str = 'mse per seq: ' + str(mse)
                     logger.debug(log_str)
-                    print('fmae per seq: ' + str(fmae))
+                    #print('fmae per seq: ' + str(fmae))
                     log_str = 'fmae per seq: ' + str(fmae)
                     logger.debug(log_str)
                     #for i in range(FLAGS.seq_length - FLAGS.input_length):
@@ -568,9 +568,9 @@ def main(argv=None):
                     #fmae = np.asarray(fmae, dtype=np.float32) #/ batch_id
                     #ssim = np.asarray(ssim, dtype=np.float32) #/ (FLAGS.batch_size * batch_id)
                     #sharp = np.asarray(sharp, dtype=np.float32) / (FLAGS.batch_size * batch_id)
-                    print('psnr per frame: ' + str(psnr))
+                    #print('psnr per frame: ' + str(psnr))
                     log_str = 'psnr per seq: ' + str(psnr)
-                    metrics_fh.debug(log_str)
+                    logger.debug(log_str)
                 #for b_idx in range(len(img_gen)):
                     #img_pd = img_gen[b_idx]
                     #img_gt = batch_val_seq_unscaled[b_idx]
@@ -579,7 +579,7 @@ def main(argv=None):
                 #print("iter: "+str(itr) + ", batch: " + str(val_batch_num) + ". current perceptual dist: "+str(dist))
         if itr % FLAGS.test_interval == 0:
             avg_dist = dist / val_batch_num
-            print("iter: " + str(itr) + ", current perceptual dist: " + str(avg_dist))
+            #print("iter: " + str(itr) + ", current perceptual dist: " + str(avg_dist))
             logger.debug("iter: " + str(itr) + ", current perceptual dist: " + str(avg_dist))
         #for i in range(FLAGS.seq_length - FLAGS.input_length):
                     #print(psnr[i])
