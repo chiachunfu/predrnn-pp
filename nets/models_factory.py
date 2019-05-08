@@ -27,4 +27,4 @@ def construct_model(name, images, mask_true, num_layers, num_hidden,
         raise ValueError('Name of network unknown %s' % name)
     func = networks_map[name]
     return func(images, mask_true, num_layers, num_hidden, filter_size,
-                stride, seq_length, input_length, tln)
+                   stride, seq_length, input_length, tln)

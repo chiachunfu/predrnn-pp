@@ -70,20 +70,20 @@ if 0:
                                 'max num of steps.')
     tf.app.flags.DEFINE_integer('print_interval', 1,
                                 'number of batches printing  loss.')
-elif 0:
+elif 1:
     tf.app.flags.DEFINE_integer('input_length', 5,
                                 'encoder hidden states.')
     tf.app.flags.DEFINE_integer('seq_length', 6,
                                 'total input and output length.')
-    tf.app.flags.DEFINE_integer('img_width', 96,
+    tf.app.flags.DEFINE_integer('img_width', 48,
                                 'input image width.')
     tf.app.flags.DEFINE_integer('img_channel', 3,
                                 'number of image channel.')
     tf.app.flags.DEFINE_integer('patch_size', 1,
                                 'patch size on one dimension.')
-    tf.app.flags.DEFINE_integer('batch_size',4,
+    tf.app.flags.DEFINE_integer('batch_size',8,
     'batch size for training.')
-    tf.app.flags.DEFINE_string('num_hidden', '64,48,32,32',
+    tf.app.flags.DEFINE_string('num_hidden', '128,64,64,64',
                                'COMMA separated number of units in a convlstm layer.')
     tf.app.flags.DEFINE_float('lr', 0.001,
                               'base learning rate.')
@@ -196,13 +196,15 @@ class Model(object):
         configProt.allow_soft_placement = True
         self.sess = tf.Session(config = configProt)
         self.sess.run(init)
-        if FLAGS.pretrained_model:
-            self.saver.restore(self.sess, FLAGS.pretrained_model)
-
+        #if FLAGS.pretrained_model:
+            #self.saver.restore(self.sess, FLAGS.pretrained_model)
         #with tf.Session() as sess:
-        writer = tf.summary.FileWriter("output", self.sess.graph)
-        print(self.sess.run(init))
-        writer.close()
+        #saver = tf.train.import_meta_graph('./checkpoints/mnist_predrnn_pp1/model.ckpt-9.meta')
+        #saver.restore(self.sess, "./checkpoints/mnist_predrnn_pp1/model.ckpt-9")
+        #with tf.Session() as sess:
+        #writer = tf.summary.FileWriter("output", self.sess.graph)
+        #print(self.sess.run(init))
+        #writer.close()
     def train(self, inputs, lr, mask_true):
         feed_dict = {self.x: inputs}
         feed_dict.update({self.tf_lr: lr})
@@ -365,20 +367,34 @@ def main(argv=None):
 
     val_dir = 'catz/test'
     train_dir = 'catz/train'
-    train_dir = 'catz_overfit'
-    val_dir = 'catz_overfit'
-
-
+    #train_dir = 'catz_overfit'
+    #val_dir = 'catz_overfit'
     log_start_time = str(datetime.datetime.now().strftime('%Y-%m-%d_%H'))
 
-    train_log_file_name = 'debug_train_loss_'+log_start_time+'.txt'
+    metrics_log_file_name = 'debug_metrics_' + log_start_time + '.log'
+
+    import logging
+    logging.basicConfig(filename=metrics_log_file_name, level=logging.DEBUG)
+    logger = logging.getLogger()
+    handler = logging.StreamHandler()
+    formatter = logging.Formatter(
+        '%(asctime)s %(name)-12s %(levelname)-8s %(message)s')
+    handler.setFormatter(formatter)
+    logger.addHandler(handler)
+    logger.setLevel(logging.DEBUG)
+
+    logger.debug('start metrics logging')
+
+
+    train_log_file_name = 'debug_train_loss_'+log_start_time+''
     train_fh = open(train_log_file_name,'w')
-    val_log_file_name = 'debug_val_loss_'+log_start_time+'.txt'
+    val_log_file_name = 'debug_val_loss_'+log_start_time+''
     val_fh = open(val_log_file_name,'w')
 
-    metrics_log_file_name = 'debug_metrics_' + log_start_time + '.txt'
-    metrics_fh = open(metrics_log_file_name, 'w')
+    #metrics_fh = open(metrics_log_file_name, 'w')
+    #metrics_fh = logging.FileHandler('')
 
+    #metrics_fh.write("hi\n")
     for itr in range(1, FLAGS.max_iterations + 1):
         TrainData = batch_generator(train_dir)
         ValData = batch_generator(val_dir)
@@ -541,11 +557,11 @@ def main(argv=None):
                 #avg_mse = avg_mse / (batch_id * FLAGS.batch_size)
                 if batch_id % FLAGS.print_interval == 0 :
                     print('mse per seq: ' + str(mse))
-                    log_str = 'mse per seq: ' + str(mse) + "\n"
-                    metrics_fh.write(log_str)
+                    log_str = 'mse per seq: ' + str(mse)
+                    logger.debug(log_str)
                     print('fmae per seq: ' + str(fmae))
-                    log_str = 'fmae per seq: ' + str(fmae) + "\n"
-                    metrics_fh.write(log_str)
+                    log_str = 'fmae per seq: ' + str(fmae)
+                    logger.debug(log_str)
                     #for i in range(FLAGS.seq_length - FLAGS.input_length):
                         #print(img_mse[i] / (batch_id * FLAGS.batch_size))
                     psnr = np.asarray(psnr, dtype=np.float32) #/ batch_id
@@ -553,8 +569,8 @@ def main(argv=None):
                     #ssim = np.asarray(ssim, dtype=np.float32) #/ (FLAGS.batch_size * batch_id)
                     #sharp = np.asarray(sharp, dtype=np.float32) / (FLAGS.batch_size * batch_id)
                     print('psnr per frame: ' + str(psnr))
-                    log_str = 'psnr per seq: ' + str(psnr) + "\n"
-                    metrics_fh.write(log_str)
+                    log_str = 'psnr per seq: ' + str(psnr)
+                    metrics_fh.debug(log_str)
                 #for b_idx in range(len(img_gen)):
                     #img_pd = img_gen[b_idx]
                     #img_gt = batch_val_seq_unscaled[b_idx]
@@ -564,7 +580,7 @@ def main(argv=None):
         if itr % FLAGS.test_interval == 0:
             avg_dist = dist / val_batch_num
             print("iter: " + str(itr) + ", current perceptual dist: " + str(avg_dist))
-            metrics_fh.write("iter: " + str(itr) + ", current perceptual dist: " + str(avg_dist) + "\n")
+            logger.debug("iter: " + str(itr) + ", current perceptual dist: " + str(avg_dist))
         #for i in range(FLAGS.seq_length - FLAGS.input_length):
                     #print(psnr[i])
                 #print('fmae per frame: ' + str(np.mean(fmae)))
