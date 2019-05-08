@@ -40,8 +40,9 @@ tf.app.flags.DEFINE_string('save_dir', 'checkpoints/mnist_predrnn_pp',
 # model
 tf.app.flags.DEFINE_string('model_name', 'predrnn_pp',
                            'The name of the architecture.')
-tf.app.flags.DEFINE_string('pretrained_model', '',
-                           'file of a pretrained model to initialize from.')
+tf.app.flags.DEFINE_string('pretrained_model', 'checkpoints/mnist_predrnn_pp1/model.ckpt',
+#tf.app.flags.DEFINE_string('pretrained_model', '',
+                                                      'file of a pretrained model to initialize from.')
 if 0:
     tf.app.flags.DEFINE_integer('input_length', 10,
                                 'encoder hidden states.')
@@ -69,7 +70,7 @@ if 0:
                                 'max num of steps.')
     tf.app.flags.DEFINE_integer('print_interval', 1,
                                 'number of batches printing  loss.')
-elif 1:
+elif 0:
     tf.app.flags.DEFINE_integer('input_length', 5,
                                 'encoder hidden states.')
     tf.app.flags.DEFINE_integer('seq_length', 6,
@@ -115,7 +116,7 @@ else:
                               'base learning rate.')
     tf.app.flags.DEFINE_integer('snapshot_interval', 1,
                                 'number of iters saving models.')
-    tf.app.flags.DEFINE_integer('test_interval', 3,
+    tf.app.flags.DEFINE_integer('test_interval', 1,
                                 'number of iters for test.')
     tf.app.flags.DEFINE_string('gen_frm_dir', 'result_debug/catz_predrnn_pp',
                                'dir to store result.')
@@ -364,8 +365,8 @@ def main(argv=None):
 
     val_dir = 'catz/test'
     train_dir = 'catz/train'
-    #train_dir = 'catz_overfit'
-    #val_dir = 'catz_overfit'
+    train_dir = 'catz_overfit'
+    val_dir = 'catz_overfit'
 
 
     log_start_time = str(datetime.datetime.now().strftime('%Y-%m-%d_%H'))
