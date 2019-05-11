@@ -81,7 +81,7 @@ elif 1:
                                 'number of image channel.')
     tf.app.flags.DEFINE_integer('patch_size', 4,
                                 'patch size on one dimension.')
-    tf.app.flags.DEFINE_integer('batch_size',8,
+    tf.app.flags.DEFINE_integer('batch_size',16,
     'batch size for training.')
     tf.app.flags.DEFINE_string('num_hidden', '128,64,64,64',
                                'COMMA separated number of units in a convlstm layer.')
