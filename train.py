@@ -75,13 +75,13 @@ elif 1:
                                 'encoder hidden states.')
     tf.app.flags.DEFINE_integer('seq_length', 6,
                                 'total input and output length.')
-    tf.app.flags.DEFINE_integer('img_width', 48,
+    tf.app.flags.DEFINE_integer('img_width', 96,
                                 'input image width.')
     tf.app.flags.DEFINE_integer('img_channel', 3,
                                 'number of image channel.')
-    tf.app.flags.DEFINE_integer('patch_size', 1,
+    tf.app.flags.DEFINE_integer(    'patch_size', 1,
                                 'patch size on one dimension.')
-    tf.app.flags.DEFINE_integer('batch_size',8,
+    tf.app.flags.DEFINE_integer('batch_size',6,
     'batch size for training.')
     tf.app.flags.DEFINE_string('num_hidden', '128,64,64,64',
                                'COMMA separated number of units in a convlstm layer.')
