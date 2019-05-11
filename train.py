@@ -79,11 +79,11 @@ elif 1:
                                 'input image width.')
     tf.app.flags.DEFINE_integer('img_channel', 3,
                                 'number of image channel.')
-    tf.app.flags.DEFINE_integer(    'patch_size', 1,
+    tf.app.flags.DEFINE_integer('patch_size', 4,
                                 'patch size on one dimension.')
-    tf.app.flags.DEFINE_integer('batch_size',4,
+    tf.app.flags.DEFINE_integer('batch_size',8,
     'batch size for training.')
-    tf.app.flags.DEFINE_string('num_hidden', '96,64,64',
+    tf.app.flags.DEFINE_string('num_hidden', '128,64,64,64',
                                'COMMA separated number of units in a convlstm layer.')
     tf.app.flags.DEFINE_float('lr', 0.001,
                               'base learning rate.')
@@ -106,11 +106,11 @@ else:
                                 'input image width.')
     tf.app.flags.DEFINE_integer('img_channel', 3,
                                 'number of image channel.')
-    tf.app.flags.DEFINE_integer('patch_size', 1,
+    tf.app.flags.DEFINE_integer('patch_size', 4,
                                 'patch size on one dimension.')
     tf.app.flags.DEFINE_integer('batch_size', 4,
                                 'batch size for training.')
-    tf.app.flags.DEFINE_string('num_hidden', '32,16,16,16',
+    tf.app.flags.DEFINE_string('num_hidden', '16,16,16,16',
                                'COMMA separated number of units in a convlstm layer.')
     tf.app.flags.DEFINE_float('lr', 0.001,
                               'base learning rate.')
@@ -429,7 +429,7 @@ def main(argv=None):
         train_batch_num = 0
         while TrainData.check_batch_left():
             batch_train_seq, _ = TrainData.batch_gen(FLAGS.batch_size)
-
+            batch_train_seq = preprocess.reshape_patch(batch_train_seq, FLAGS.patch_size)
             cost = model.train(batch_train_seq, lr, mask_true)
 
             if FLAGS.reverse_input:
@@ -452,6 +452,8 @@ def main(argv=None):
         dist = 0
         while ValData.check_batch_left():
             batch_val_seq, batch_val_seq_unscaled = ValData.batch_gen(FLAGS.batch_size)
+            batch_val_seq = preprocess.reshape_patch(batch_val_seq, FLAGS.patch_size)
+
             val_batch_num += 1
             mask_true = np.zeros((FLAGS.batch_size,
                                   FLAGS.seq_length - FLAGS.input_length - 1,
@@ -480,9 +482,12 @@ def main(argv=None):
                 batch_val_seq_unscaled = batch_val_seq_unscaled[:,-1,:,:,:]
                 img_gen = model.test(batch_val_seq, mask_true)
                 img_gen = np.asarray(img_gen)
-                img_gen = np.reshape(img_gen, [FLAGS.batch_size,FLAGS.seq_length-FLAGS.input_length, FLAGS.img_width, FLAGS.img_width,FLAGS.img_channel])
                 #print(img_gen.shape)
-                img_gen_ = img_gen
+
+                #img_gen = np.reshape(img_gen, [FLAGS.batch_size,FLAGS.seq_length-FLAGS.input_length, FLAGS.img_width, FLAGS.img_width,FLAGS.img_channel])
+                img_gen = preprocess.reshape_patch_back(img_gen[0], FLAGS.patch_size)
+                #print(img_gen.shape)
+                #img_gen_ = img_gen
                 img_gen = img_gen[:, -1, :, :, :]
                 #print(img_gen.shape)
                     # concat outputs of different gpus along batch
