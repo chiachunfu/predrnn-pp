@@ -19,7 +19,7 @@ def rnn(images, mask_true, num_layers, num_hidden, filter_size, stride=1,
             num_hidden_in = num_hidden[num_layers-1]
         else:
             num_hidden_in = num_hidden[i-1]
-        new_cell = stlstm('lstm_'+str(i+1),
+        new_cell = cslstm('lstm_'+str(i+1),
                           filter_size,
                           num_hidden_in,
                           num_hidden[i],
