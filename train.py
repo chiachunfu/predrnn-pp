@@ -38,10 +38,10 @@ tf.app.flags.DEFINE_string('save_dir', 'checkpoints/mnist_predrnn_pp',
                             'dir to store trained net.')
 
 # model
-tf.app.flags.DEFINE_string('model_name', 'predrnn_pp',
+tf.app.flags.DEFINE_string('model_name', 'res_predrnn_pp',
                            'The name of the architecture.')
-tf.app.flags.DEFINE_string('pretrained_model', 'checkpoints/mnist_predrnn_pp1/model.ckpt',
-#tf.app.flags.DEFINE_string('pretrained_model', '',
+#tf.app.flags.DEFINE_string('pretrained_model', 'checkpoints/mnist_predrnn_pp1/model.ckpt',
+tf.app.flags.DEFINE_string('pretrained_model', '',
                                                       'file of a pretrained model to initialize from.')
 if 0:
     tf.app.flags.DEFINE_integer('input_length', 10,
@@ -97,7 +97,7 @@ elif 1:
                                 'max num of steps.')
     tf.app.flags.DEFINE_integer('print_interval', 12,
                                 'number of batches printing  loss.')
-else:
+else :
     tf.app.flags.DEFINE_integer('input_length', 5,
                                 'encoder hidden states.')
     tf.app.flags.DEFINE_integer('seq_length', 6,
@@ -108,7 +108,7 @@ else:
                                 'number of image channel.')
     tf.app.flags.DEFINE_integer('patch_size', 4,
                                 'patch size on one dimension.')
-    tf.app.flags.DEFINE_integer('batch_size', 4,
+    tf.app.flags.DEFINE_integer('batch_size', 8,
                                 'batch size for training.')
     tf.app.flags.DEFINE_string('num_hidden', '16,16,16,16',
                                'COMMA separated number of units in a convlstm layer.')

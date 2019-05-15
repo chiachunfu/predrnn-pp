@@ -3,6 +3,7 @@ import tensorflow as tf
 from nets import predrnn_pp
 
 networks_map = {'predrnn_pp': predrnn_pp.rnn,
+                'res_predrnn_pp': predrnn_pp.res_rnn,
                }
 
 def construct_model(name, images, mask_true, num_layers, num_hidden,
