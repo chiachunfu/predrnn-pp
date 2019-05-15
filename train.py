@@ -518,7 +518,7 @@ def main(argv=None):
 
                     # save prediction examples
                 if val_batch_num % FLAGS.print_interval == 0:
-                    path = os.path.join(res_path,str(batch_id))
+                    path = os.path.join(res_path,str(val_batch_num))
                     if not os.path.exists(path):
                         os.mkdir(path)
                     for b_idx in range(len(batch_val_seq_unscaled)):
