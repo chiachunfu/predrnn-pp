@@ -517,7 +517,7 @@ def main(argv=None):
                 #            ssim[i] += score
 
                     # save prediction examples
-                if batch_id % FLAGS.print_interval == 0:
+                if val_batch_num % FLAGS.print_interval == 0:
                     path = os.path.join(res_path,str(batch_id))
                     if not os.path.exists(path):
                         os.mkdir(path)
