@@ -93,7 +93,7 @@ elif 1:
                                 'number of iters for test.')
     tf.app.flags.DEFINE_string('gen_frm_dir', 'result_debug/catz_predrnn_pp',
                                'dir to store result.')
-    tf.app.flags.DEFINE_integer('max_iterations', 200,
+    tf.app.flags.DEFINE_integer('max_iterations', 400,
                                 'max num of steps.')
     tf.app.flags.DEFINE_integer('print_interval', 12,
                                 'number of batches printing  loss.')
