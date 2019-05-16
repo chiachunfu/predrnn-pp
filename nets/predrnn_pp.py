@@ -114,7 +114,7 @@ def res_rnn(images, mask_true, num_layers, num_hidden, filter_size, stride=1,
                 hidden[i], cell[i], mem = lstm[i](hidden[i-1], hidden[i], cell[i], mem)
 
 
-            res_layer = tf.concat([hidden[num_layers-1], hidden[num_layers-3]], axis = 3, name='stack')
+            res_layer = tf.add(hidden[num_layers-1], hidden[num_layers-3], name='stack')
 
             x_gen = tf.layers.conv2d(inputs=res_layer,
                                      filters=output_channels,
