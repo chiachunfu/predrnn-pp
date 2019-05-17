@@ -85,7 +85,7 @@ elif 1:
     'batch size for training.')
     tf.app.flags.DEFINE_string('num_hidden', '128,64,64,64',
                                'COMMA separated number of units in a convlstm layer.')
-    tf.app.flags.DEFINE_float('lr', 0.001,
+    tf.app.flags.DEFINE_float('lr', 0.01,
                               'base learning rate.')
     tf.app.flags.DEFINE_integer('snapshot_interval', 5,
                                 'number of iters saving models.')
@@ -110,17 +110,17 @@ else :
                                 'patch size on one dimension.')
     tf.app.flags.DEFINE_integer('batch_size', 8,
                                 'batch size for training.')
-    tf.app.flags.DEFINE_string('num_hidden', '16,16,16,16',
+    tf.app.flags.DEFINE_string('num_hidden', '32,16,16,16',
                                'COMMA separated number of units in a convlstm layer.')
-    tf.app.flags.DEFINE_float('lr', 0.001,
+    tf.app.flags.DEFINE_float('lr', 0.01,
                               'base learning rate.')
-    tf.app.flags.DEFINE_integer('snapshot_interval', 1,
+    tf.app.flags.DEFINE_integer('snapshot_interval', 100,
                                 'number of iters saving models.')
     tf.app.flags.DEFINE_integer('test_interval', 1,
                                 'number of iters for test.')
     tf.app.flags.DEFINE_string('gen_frm_dir', 'result_debug/catz_predrnn_pp',
                                'dir to store result.')
-    tf.app.flags.DEFINE_integer('max_iterations', 200,
+    tf.app.flags.DEFINE_integer('max_iterations', 2000,
                                 'max num of steps.')
     tf.app.flags.DEFINE_integer('print_interval', 1,
                                 'number of batches printing  loss.')
@@ -199,8 +199,8 @@ class Model(object):
         #if FLAGS.pretrained_model:
             #self.saver.restore(self.sess, FLAGS.pretrained_model)
         #with tf.Session() as sess:
-        #saver = tf.train.import_meta_graph('./checkpoints/mnist_predrnn_pp1/model.ckpt-9.meta')
-        #saver.restore(self.sess, "./checkpoints/mnist_predrnn_pp1/model.ckpt-9")
+        #saver = tf.train.import_meta_graph('./checkpoints/mnist_predrnn_pp1/model.ckpt-200.meta')
+        #saver.restore(self.sess, "./checkpoints/mnist_predrnn_pp1/model.ckpt-200")
         #with tf.Session() as sess:
         #writer = tf.summary.FileWriter("output", self.sess.graph)
         #print(self.sess.run(init))
