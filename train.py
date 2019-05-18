@@ -70,7 +70,7 @@ if 0:
                                 'max num of steps.')
     tf.app.flags.DEFINE_integer('print_interval', 1,
                                 'number of batches printing  loss.')
-elif 1:
+elif 0:
     tf.app.flags.DEFINE_integer('input_length', 5,
                                 'encoder hidden states.')
     tf.app.flags.DEFINE_integer('seq_length', 6,
@@ -106,13 +106,13 @@ else :
                                 'input image width.')
     tf.app.flags.DEFINE_integer('img_channel', 3,
                                 'number of image channel.')
-    tf.app.flags.DEFINE_integer('patch_size', 4,
+    tf.app.flags.DEFINE_integer('patch_size', 2,
                                 'patch size on one dimension.')
     tf.app.flags.DEFINE_integer('batch_size', 8,
                                 'batch size for training.')
     tf.app.flags.DEFINE_string('num_hidden', '32,16,16,16',
                                'COMMA separated number of units in a convlstm layer.')
-    tf.app.flags.DEFINE_float('lr', 0.01,
+    tf.app.flags.DEFINE_float('lr', 0.001,
                               'base learning rate.')
     tf.app.flags.DEFINE_integer('snapshot_interval', 100,
                                 'number of iters saving models.')
@@ -186,6 +186,7 @@ class Model(object):
             self.pred_seq.append(pred_ims)
 
         self.train_op = tf.train.AdamOptimizer(FLAGS.lr).minimize(loss)
+        #self.train_op = tf.train.GradientDescentOptimizer(FLAGS.lr).minimize(loss)
 
         # session
         variables = tf.global_variables()
@@ -367,8 +368,8 @@ def main(argv=None):
 
     val_dir = 'catz/test'
     train_dir = 'catz/train'
-    #train_dir = 'catz_overfit'
-    #val_dir = 'catz_overfit'
+    train_dir = 'catz_overfit'
+    val_dir = 'catz_overfit'
     log_start_time = str(datetime.datetime.now().strftime('%Y-%m-%d_%H'))
 
     metrics_log_file_name = 'debug_metrics_' + log_start_time + '.log'
@@ -428,6 +429,8 @@ def main(argv=None):
         train_cost_avg = 0
         train_batch_num = 0
         while TrainData.check_batch_left():
+            #lr = FLAGS.lr * np.power(0.5, (TrainData.counter+1) / 200 )
+            #print(lr)
             batch_train_seq, _ = TrainData.batch_gen(FLAGS.batch_size)
             batch_train_seq = preprocess.reshape_patch(batch_train_seq, FLAGS.patch_size)
             cost = model.train(batch_train_seq, lr, mask_true)
@@ -466,7 +469,7 @@ def main(argv=None):
                 print("iter: ", itr, ", batch: ", val_batch_num, ", current batch validation loss: ", cost, "avg validation batch loss: ",
                       val_cost_avg)
                 log_str = "iter: " + str(itr) + ", batch: " + str(val_batch_num) + ", current batch validation loss: " + str(cost) + \
-                          ", avg validation batch loss: " + str(train_cost_avg) + "\n"
+                          ", avg validation batch loss: " + str(val_cost_avg) + "\n"
                 val_fh.write(log_str)
             #batch_id = 0
             if itr % FLAGS.test_interval == 0:
