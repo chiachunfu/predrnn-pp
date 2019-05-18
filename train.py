@@ -106,7 +106,7 @@ else :
                                 'input image width.')
     tf.app.flags.DEFINE_integer('img_channel', 3,
                                 'number of image channel.')
-    tf.app.flags.DEFINE_integer('patch_size', 2,
+    tf.app.flags.DEFINE_integer('patch_size', 4,
                                 'patch size on one dimension.')
     tf.app.flags.DEFINE_integer('batch_size', 8,
                                 'batch size for training.')
@@ -120,7 +120,7 @@ else :
                                 'number of iters for test.')
     tf.app.flags.DEFINE_string('gen_frm_dir', 'result_debug/catz_predrnn_pp',
                                'dir to store result.')
-    tf.app.flags.DEFINE_integer('max_iterations', 2000,
+    tf.app.flags.DEFINE_integer('max_iterations', 5000,
                                 'max num of steps.')
     tf.app.flags.DEFINE_integer('print_interval', 1,
                                 'number of batches printing  loss.')
@@ -294,7 +294,7 @@ class batch_generator():
         #print(self.total_len)
         random.shuffle(self.cat_dirs)
     #def batch_gen(self, batch_size, is_add_noise):
-    def batch_gen(self, batch_size):
+    def batch_gen(self, batch_size, add_blur):
 
         input_images = np.zeros(
             (batch_size, 6, FLAGS.img_width, FLAGS.img_width, 3))
@@ -304,7 +304,13 @@ class batch_generator():
             #counter = 0
         for i in range(batch_size):
             input_imgs = glob.glob(self.cat_dirs[self.counter + i] + "/cat_[0-5]*")
-            imgs = [(cv2.resize(cv2.imread(img), (FLAGS.img_width,FLAGS.img_width))/255. - 0.5) * 2 for img in sorted(input_imgs)]
+            #imgs = [(cv2.resize(cv2.imread(img), (FLAGS.img_width,FLAGS.img_width))/255. - 0.5) * 2 for img in sorted(input_imgs)]
+            if add_blur:
+                imgs = [(cv2.resize(cv2.GaussianBlur(cv2.imread(img), (3,3),0),
+                                    (FLAGS.img_width,FLAGS.img_width))/255. - 0.5) * 2 for img in sorted(input_imgs)]
+            else:
+                imgs = [(cv2.resize(cv2.imread(img), (FLAGS.img_width,FLAGS.img_width))/255. - 0.5) * 2 for img in sorted(input_imgs)]
+
             imgs_unscaled = [cv2.imread(img) for img in sorted(input_imgs)]
             #input_images[i] = np.concatenate(imgs, axis=2)
 
@@ -431,7 +437,8 @@ def main(argv=None):
         while TrainData.check_batch_left():
             #lr = FLAGS.lr * np.power(0.5, (TrainData.counter+1) / 200 )
             #print(lr)
-            batch_train_seq, _ = TrainData.batch_gen(FLAGS.batch_size)
+            prob = np.random.randint(2)
+            batch_train_seq, _ = TrainData.batch_gen(FLAGS.batch_size, prob)
             batch_train_seq = preprocess.reshape_patch(batch_train_seq, FLAGS.patch_size)
             cost = model.train(batch_train_seq, lr, mask_true)
 
@@ -454,7 +461,7 @@ def main(argv=None):
         #batch_id = 0
         dist = 0
         while ValData.check_batch_left():
-            batch_val_seq, batch_val_seq_unscaled = ValData.batch_gen(FLAGS.batch_size)
+            batch_val_seq, batch_val_seq_unscaled = ValData.batch_gen(FLAGS.batch_size,0)
             batch_val_seq = preprocess.reshape_patch(batch_val_seq, FLAGS.patch_size)
 
             val_batch_num += 1
