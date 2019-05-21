@@ -595,7 +595,7 @@ def main(argv=None):
         if itr % FLAGS.test_interval == 0:
             avg_dist = dist / val_batch_num
             #print("iter: " + str(itr) + ", current perceptual dist: " + str(avg_dist))
-            logger.debug("iter: " + str(itr) + ", current perceptual dist: " + str(avg_dist))
+            logger.debug("iter: " + str(itr) + ", current perceptual dist: " + str(avg_dist)+", train loss: "+str(train_cost_avg)+", val loss: "+str(val_cost_avg))
         #for i in range(FLAGS.seq_length - FLAGS.input_length):
                     #print(psnr[i])
                 #print('fmae per frame: ' + str(np.mean(fmae)))
