@@ -4,7 +4,8 @@ from nets import predrnn_pp
 
 networks_map = {'predrnn_pp': predrnn_pp.rnn,
                 'res_predrnn_pp': predrnn_pp.res_rnn,
-               }
+                'unet_predrnn_pp': predrnn_pp.unet_rnn,
+                }
 
 def construct_model(name, images, mask_true, num_layers, num_hidden,
                     filter_size, stride, seq_length, input_length, tln):

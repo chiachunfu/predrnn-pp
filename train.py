@@ -38,7 +38,7 @@ tf.app.flags.DEFINE_string('save_dir', 'checkpoints/mnist_predrnn_pp',
                             'dir to store trained net.')
 
 # model
-tf.app.flags.DEFINE_string('model_name', 'res_predrnn_pp',
+tf.app.flags.DEFINE_string('model_name', 'unet_predrnn_pp',
                            'The name of the architecture.')
 #tf.app.flags.DEFINE_string('pretrained_model', 'checkpoints/mnist_predrnn_pp1/model.ckpt',
 tf.app.flags.DEFINE_string('pretrained_model', '',
