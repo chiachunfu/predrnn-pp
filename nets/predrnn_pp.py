@@ -196,11 +196,17 @@ def unet_rnn(images, mask_true, num_layers, num_hidden, filter_size, stride=1,
     #        else:
     #            inputs = mask_true[:,t-10]*images[:,t] + (1-mask_true[:,t-10])*x_gen
             hid_0 = convlstm(shape[0], image_in, [shape[-3],shape[-2],shape[-1]], num_hidden[0],0)
+            hid_0 = tf.contrib.layers.layer_norm(hid_0)
             hid_1 = convlstm(shape[0], hid_0, [shape[-3],shape[-2],num_hidden[0]], num_hidden[1],1)
+            hid_1 = tf.contrib.layers.layer_norm(hid_1)
             hid_2 = convlstm(shape[0], hid_1, [shape[-3],shape[-2],num_hidden[1]], num_hidden[2],2)
+            hid_2 = tf.contrib.layers.layer_norm(hid_2)
             u_0_2 = tf.concat([hid_2, hid_0],axis=-1, name='stack_0_2')
+            u_0_2 = tf.contrib.layers.layer_norm(u_0_2)
             hid_3 = convlstm(shape[0], u_0_2, [shape[-3],shape[-2],num_hidden[2]+num_hidden[0]], num_hidden[3],3)
+            hid_3 = tf.contrib.layers.layer_norm(hid_3)
             u_in_3 = tf.concat([hid_3, image_in],axis=-1, name='stack_in_3')
+            u_in_3 = tf.contrib.layers.layer_norm(u_in_3)
             #hid_4 = convlstm(shape[0], hid_3, [shape[-3],shape[-2],shape[-1]], num_hidden[2], stride=1)
 
             #hidden[0], cell[0], mem = convlstm2d(inputs, hidden[0], cell[0], mem)

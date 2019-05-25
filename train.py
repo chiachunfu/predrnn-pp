@@ -589,7 +589,7 @@ def main(argv=None):
                 #for b_idx in range(len(img_gen)):
                     #img_pd = img_gen[b_idx]
                     #img_gt = batch_val_seq_unscaled[b_idx]
-                #dist = perceptual_distance(Ｋ.variable(value=batch_val_seq_unscaled), K.variable(value=img_gen))
+                #dist = perceptual_distance(.variable(value=batch_val_seq_unscaled), K.variable(value=img_gen))
                 dist += perceptual_distance(batch_val_seq_unscaled, img_gen)
                 #print("iter: "+str(itr) + ", batch: " + str(val_batch_num) + ". current perceptual dist: "+str(dist))
         if itr % FLAGS.test_interval == 0:
